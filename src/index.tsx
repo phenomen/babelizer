@@ -285,7 +285,7 @@ function App() {
               height={3}
             >
               <input
-                placeholder="e.g., packs/wfrp4e-core/actors"
+                placeholder="e.g., packs/my-module/actors"
                 focused={focusedField === "inputFolder"}
                 onInput={setInputFolder}
                 onSubmit={handleProcess}

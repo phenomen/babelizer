@@ -1,7 +1,7 @@
 {
   "name": "babelizer",
   "private": false,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI tool to extract Foundry VTT compendium packs into Babele translation files",
   "module": "src/index.tsx",
   "type": "module",
@@ -32,7 +32,7 @@
     "url": "https://github.com/phenomen/babelizer"
   },
   "engines": {
-    "bun": ">=1.0.0"
+    "bun": ">=1.3.0"
   },
   "devDependencies": {
     "@types/bun": "latest"

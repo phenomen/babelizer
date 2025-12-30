@@ -14,17 +14,17 @@ bunx babelizer
 
 ## Mapping File
 
-Create a `mapping.json` file to define which fields to extract for each compendium type:
+Create a `mapping.json` file to define which fields to extract for each compendium type. See example in `mapping.json.example`.
 
 ```json
 {
   "Actors": {
     "name": "name",
-    "description": "system.details.description.value"
+    "description": "system.description"
   },
   "Items": {
     "name": "name",
-    "description": "system.description.value"
+    "description": "system.description"
   },
   "Scenes": {
     "name": "name"
@@ -35,3 +35,8 @@ Create a `mapping.json` file to define which fields to extract for each compendi
   }
 }
 ```
+
+## Data Types
+
+Currently the tool supports `Actors`, `Items`, `Scenes` and `Tables`.
+`Journals` support will be added soon.
