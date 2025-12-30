@@ -1,8 +1,12 @@
 # dependencies (bun install)
 node_modules
 
+# input
+packs
+
 # output
 out
+output
 dist
 *.tgz
 

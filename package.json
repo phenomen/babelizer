@@ -1,20 +1,49 @@
 {
   "name": "babelizer",
+  "private": false,
+  "version": "1.0.0",
+  "description": "CLI tool to extract Foundry VTT compendium packs into Babele translation files",
   "module": "src/index.tsx",
   "type": "module",
-  "private": true,
+  "bin": {
+    "babelizer": "./bin/cli.ts"
+  },
+  "files": [
+    "bin",
+    "src",
+    "mapping.json.example"
+  ],
   "scripts": {
-    "dev": "bun run --watch src/index.tsx"
+    "dev": "bun run --watch src/index.tsx",
+    "start": "bun run src/index.tsx"
+  },
+  "keywords": [
+    "foundry",
+    "foundry-vtt",
+    "babele",
+    "translation",
+    "cli",
+    "opentui"
+  ],
+  "author": "phenomen",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phenomen/babelizer"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
   },
   "devDependencies": {
     "@types/bun": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.9.2"
   },
   "dependencies": {
-    "@opentui/core": "^0.1.66",
-    "@opentui/react": "^0.1.66",
+    "@foundryvtt/foundryvtt-cli": "^3.0.2",
+    "@opentui/core": "^0.1.67",
+    "@opentui/react": "^0.1.67",
     "react": "^19.2.3"
   }
 }

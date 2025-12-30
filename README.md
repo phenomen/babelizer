@@ -1,15 +1,37 @@
-# react
+# Babelizer
 
-To install dependencies:
+A CLI tool to extract Foundry VTT compendium packs into Babele translation files.
+
+## Requirements
+
+- [Bun](https://bun.sh/) runtime.
+
+## Usage
 
 ```bash
-bun install
+bunx babelizer
 ```
 
-To run:
+## Mapping File
 
-```bash
-bun dev
+Create a `mapping.json` file to define which fields to extract for each compendium type:
+
+```json
+{
+  "Actors": {
+    "name": "name",
+    "description": "system.details.description.value"
+  },
+  "Items": {
+    "name": "name",
+    "description": "system.description.value"
+  },
+  "Scenes": {
+    "name": "name"
+  },
+  "Tables": {
+    "name": "name",
+    "description": "description"
+  }
+}
 ```
-
-This project was created using `bun create tui`. [create-tui](https://git.new/create-tui) is the easiest way to get started with OpenTUI.
