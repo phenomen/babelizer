@@ -1,6 +1,7 @@
+import type { SelectOption } from "@opentui/core";
 import { createCliRenderer } from "@opentui/core";
 import { createRoot, useKeyboard } from "@opentui/react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { extractPack } from "@foundryvtt/foundryvtt-cli";
 import { Glob } from "bun";
 import path from "path";
@@ -10,7 +11,7 @@ import fs from "fs";
 type FieldMappings = Record<string, Record<string, string>>;
 
 type AppState = "input" | "processing" | "complete" | "error";
-type FocusedField = "inputFolder" | "mappingFile" | "sortCheckbox" | "idKeyCheckbox";
+type FocusedField = "inputFolder" | "mappingFile" | "compendiumType" | "sortCheckbox" | "idKeyCheckbox";
 
 const COLORS = {
   primary: "orange",        
@@ -24,17 +25,6 @@ const COLORS = {
 // Utility functions
 function getNestedValue(obj: any, path: string): any {
   return path.split(".").reduce((current, key) => current?.[key], obj);
-}
-
-function getCompendiumType(inputPath: string): string | null {
-  const normalizedPath = inputPath.replace(/\\/g, "/").toLowerCase();
-
-  if (normalizedPath.includes("/actors")) return "Actors";
-  if (normalizedPath.includes("/items")) return "Items";
-  if (normalizedPath.includes("/scenes")) return "Scenes";
-  if (normalizedPath.includes("/tables")) return "Tables";
-
-  return null;
 }
 
 function getOutputFilename(inputPath: string): string {
@@ -92,16 +82,12 @@ async function extract(input: string) {
 async function compile(
   input: string,
   fieldMappings: FieldMappings,
+  compendiumType: string,
   sortAlphabetically: boolean,
   useIdAsKey: boolean
 ) {
   const outputDir = path.join(input, "output");
   const glob = new Glob("**/*.json");
-
-  const compendiumType = getCompendiumType(input);
-  if (!compendiumType) {
-    throw new Error(`Unknown compendium type for path: ${input}`);
-  }
 
   const typeMapping = fieldMappings[compendiumType];
   if (!typeMapping) {
@@ -169,6 +155,8 @@ function App() {
   const [focusedField, setFocusedField] = useState<FocusedField>("inputFolder");
   const [inputFolder, setInputFolder] = useState("");
   const [mappingFile, setMappingFile] = useState("mapping.json");
+  const [typeOptions, setTypeOptions] = useState<SelectOption[]>([]);
+  const [selectedTypeIndex, setSelectedTypeIndex] = useState(0);
   const [sortAlphabetically, setSortAlphabetically] = useState(false);
   const [useIdAsKey, setUseIdAsKey] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
@@ -179,14 +167,36 @@ function App() {
     label: string;
   } | null>(null);
 
-  const detectedType = inputFolder ? getCompendiumType(inputFolder) : null;
+  // Load available types from mapping file
+  useEffect(() => {
+    async function loadTypes() {
+      if (!fs.existsSync(mappingFile)) {
+        setTypeOptions([]);
+        return;
+      }
+      try {
+        const fieldMappings: FieldMappings = await Bun.file(mappingFile).json();
+        const options: SelectOption[] = Object.keys(fieldMappings).map((type) => ({
+          name: type,
+          description: `Extract ${type.toLowerCase()} pack`,
+          value: type,
+        }));
+        setTypeOptions(options);
+        setSelectedTypeIndex(0);
+      } catch {
+        setTypeOptions([]);
+      }
+    }
+    loadTypes();
+  }, [mappingFile]);
 
   useKeyboard((key) => {
     if (state === "input") {
       if (key.name === "tab") {
         setFocusedField((prev) => {
           if (prev === "inputFolder") return "mappingFile";
-          if (prev === "mappingFile") return "sortCheckbox";
+          if (prev === "mappingFile") return "compendiumType";
+          if (prev === "compendiumType") return "sortCheckbox";
           if (prev === "sortCheckbox") return "idKeyCheckbox";
           return "inputFolder";
         });
@@ -236,6 +246,19 @@ function App() {
       return;
     }
 
+    if (typeOptions.length === 0) {
+      setErrorMessage("No compendium types available in mapping file");
+      setState("error");
+      return;
+    }
+
+    const selectedType = typeOptions[selectedTypeIndex]?.value as string;
+    if (!selectedType) {
+      setErrorMessage("Please select a compendium type");
+      setState("error");
+      return;
+    }
+
     setState("processing");
     setStatusMessage("Extracting compendium pack...");
 
@@ -245,7 +268,7 @@ function App() {
       await extract(inputFolder);
       setStatusMessage("Compiling Babele translations...");
 
-      const result = await compile(inputFolder, fieldMappings, sortAlphabetically, useIdAsKey);
+      const result = await compile(inputFolder, fieldMappings, selectedType, sortAlphabetically, useIdAsKey);
 
       setResultInfo(result);
       setStatusMessage("");
@@ -254,10 +277,10 @@ function App() {
       setErrorMessage(err instanceof Error ? err.message : String(err));
       setState("error");
     }
-  }, [inputFolder, mappingFile, sortAlphabetically, useIdAsKey]);
+  }, [inputFolder, mappingFile, typeOptions, selectedTypeIndex, sortAlphabetically, useIdAsKey]);
 
   return (
-    <box flexDirection="column" padding={1} flexGrow={1}>
+    <box flexDirection="column" padding={0} flexGrow={1}>
       {/* Header */}
       <box justifyContent="center" marginBottom={1}>
         <ascii-font font="tiny" color={COLORS.primary} text="BABELIZER" />
@@ -291,11 +314,6 @@ function App() {
                 onSubmit={handleProcess}
               />
             </box>
-            {detectedType && (
-              <text fg={COLORS.success}>
-                Detected type: <strong>{detectedType}</strong>
-              </text>
-            )}
           </box>
 
           {/* Mapping File */}
@@ -320,6 +338,29 @@ function App() {
             </box>
           </box>
 
+          {/* Compendium Type Selection */}
+          <box flexDirection="column">
+            <text fg={COLORS.primary}>
+              <strong>Compendium Type</strong>
+            </text>
+            <box
+              border
+              borderStyle={focusedField === "compendiumType" ? "double" : "single"}
+              borderColor={focusedField === "compendiumType" ? COLORS.primary : COLORS.muted}
+            >
+              {typeOptions.length > 0 ? (
+                <select
+                  style={{height: 4}}
+                  options={typeOptions}                  
+                  focused={focusedField === "compendiumType"}
+                  onChange={(index) => setSelectedTypeIndex(index)}
+                />
+              ) : (
+                <text fg={COLORS.muted}>No types available - check mapping file</text>
+              )}
+            </box>
+          </box>
+
           {/* Sort Checkbox */}
           <box flexDirection="row" gap={1} alignItems="center">
             <box
@@ -327,7 +368,7 @@ function App() {
               borderStyle={focusedField === "sortCheckbox" ? "double" : "single"}
               borderColor={focusedField === "sortCheckbox" ? COLORS.primary : COLORS.muted}
               width={3}
-              height={3}
+              height={2}
               justifyContent="center"
               alignItems="center"
             >
@@ -347,7 +388,7 @@ function App() {
               borderStyle={focusedField === "idKeyCheckbox" ? "double" : "single"}
               borderColor={focusedField === "idKeyCheckbox" ? COLORS.primary : COLORS.muted}
               width={3}
-              height={3}
+              height={2}
               justifyContent="center"
               alignItems="center"
             >
