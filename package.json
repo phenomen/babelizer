@@ -1,50 +1,56 @@
 {
   "name": "babelizer",
+  "version": "1.1.0",
   "private": false,
-  "version": "1.0.3",
   "description": "CLI tool to extract Foundry VTT compendium packs into Babele translation files",
-  "module": "src/index.tsx",
-  "type": "module",
+  "keywords": [
+    "babele",
+    "cli",
+    "foundry",
+    "foundry-vtt",
+    "opentui",
+    "translation"
+  ],
+  "license": "MIT",
+  "author": "phenomen",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phenomen/babelizer"
+  },
   "bin": {
     "babelizer": "./bin/cli.ts"
   },
   "files": [
     "bin",
     "src",
-    "mapping.json.example"
+    "mapping.json"
   ],
+  "type": "module",
+  "module": "src/index.tsx",
   "scripts": {
     "dev": "bun run --watch src/index.tsx",
-    "start": "bun run src/index.tsx"
-  },
-  "keywords": [
-    "foundry",
-    "foundry-vtt",
-    "babele",
-    "translation",
-    "cli",
-    "opentui"
-  ],
-  "author": "phenomen",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/phenomen/babelizer"
-  },
-  "engines": {
-    "bun": ">=1.3.0"
-  },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "@types/react": "^19.2.7"
-  },
-  "peerDependencies": {
-    "typescript": "^5.9.2"
+    "start": "bun run src/index.tsx",
+    "lint": "oxlint --type-aware",
+    "lint:fix": "oxlint --type-aware --fix",
+    "format": "oxfmt"
   },
   "dependencies": {
     "@foundryvtt/foundryvtt-cli": "^3.0.2",
     "@opentui/core": "^0.1.67",
     "@opentui/react": "^0.1.67",
     "react": "^19.2.3"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^19.2.7",
+    "oxfmt": "^0.21.0",
+    "oxlint": "^1.36.0",
+    "oxlint-tsgolint": "^0.10.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.2"
+  },
+  "engines": {
+    "bun": ">=1.3.0"
   }
 }

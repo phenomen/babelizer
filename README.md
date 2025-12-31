@@ -14,32 +14,13 @@ bunx babelizer
 
 ## Mapping File
 
-Create a `mapping.json` file to define which fields to extract for each compendium type. See example in `mapping.json.example`.
-
-```json
-{
-  "Actors": {
-    "name": "name",
-    "description": "system.description"
-  },
-  "Items": {
-    "name": "name",
-    "description": "system.description"
-  },
-  "Scenes": {
-    "name": "name"
-  },
-  "Tables": {
-    "name": "name",
-    "description": "description"
-  }
-}
-```
+Create a `mapping.json` file to define which fields to extract for each compendium type. See example in `mapping.json`.
 
 ## Data Types
 
-Currently the tool supports `Actors`, `Items`, `Scenes` and `Tables`.
-`Journals` support will be added soon.
+Currently the tool supports `Actors`, `Items`, `Scenes` and `Tables`. `Journals` support will be added soon.
+
+Embedded items: while you can add `"items": "items"` mapping to export actor owned items, it's highly recommended to use`fromPack` Babele converter to translate embedded items.
 
 ## Credits
 

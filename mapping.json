@@ -1,26 +1,16 @@
 {
-  "Items": {
+  "Item": {
     "name": "name",
-    "description": "system.description.value",
-    "gmdescription": "system.gmdescription.value",
-    "tests": "system.tests.value",
-    "contraction": "system.contraction.value",
-    "symptoms": "system.symptoms.value",
-    "permanent": "system.permanent.value",
-    "incubationValue": "system.incubation.value",
-    "penalty": "system.penalty.value",
-    "careerGroup": "system.careergroup.value",
-    "trappings": "system.trappings"
+    "description": "system.description"
   },
-  "Actors": {
+  "Actor": {
     "name": "name",
-    "description": "system.details.biography.value",
-    "gmnotes": "system.details.gmnotes.value"
+    "description": "system.description"
   },
-  "Scenes": {
+  "Scene": {
     "name": "name"
   },
-  "Tables": {
+  "RollTable": {
     "name": "name",
     "description": "description"
   }

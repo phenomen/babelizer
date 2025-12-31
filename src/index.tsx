@@ -7,50 +7,37 @@ import { Glob } from "bun";
 import path from "path";
 import fs from "fs";
 
-// Types
 type FieldMappings = Record<string, Record<string, string>>;
-
 type AppState = "input" | "processing" | "complete" | "error";
-type FocusedField = "inputFolder" | "mappingFile" | "compendiumType" | "sortCheckbox" | "idKeyCheckbox";
+type FocusedField =
+  | "inputFolder"
+  | "mappingFile"
+  | "compendiumType"
+  | "sortCheckbox"
+  | "idKeyCheckbox";
 
 const COLORS = {
-  primary: "orange",        
-  secondary: "white",      
-  success: "green",        
-  error: "red",          
-  accent: "brightyellow",         
-  muted: "gray"
-}
+  primary: "orange",
+  secondary: "white",
+  success: "green",
+  error: "red",
+  accent: "brightyellow",
+  muted: "gray",
+};
 
-// Utility functions
 function getNestedValue(obj: any, path: string): any {
   return path.split(".").reduce((current, key) => current?.[key], obj);
 }
 
 function getOutputFilename(inputPath: string): string {
   const normalizedPath = inputPath.replace(/\\/g, "/");
-  const cleanPath = normalizedPath
-    .replace(/\/output\/?$/, "")
-    .replace(/\/$/, "");
+  const cleanPath = normalizedPath.replace(/\/output\/?$/, "").replace(/\/$/, "");
   const parts = cleanPath.split("/").filter(Boolean);
   const relevantParts = parts.slice(-2);
   return `${relevantParts.join(".")}.json`;
 }
 
-function getPackName(inputPath: string): string {
-  const normalizedPath = inputPath.replace(/\\/g, "/");
-  const cleanPath = normalizedPath.replace(/\/$/, "");
-  const parts = cleanPath.split("/").filter(Boolean);
-
-  if (parts.length >= 2) {
-    return parts[parts.length - 2] ?? "unknown";
-  }
-  return parts[parts.length - 1] ?? "unknown";
-}
-
-function parseTableResults(
-  results: any[]
-): Record<string, { name: string; description: string }> {
+function parseTableResults(results: any[]): Record<string, { name: string; description: string }> {
   const parsed: Record<string, { name: string; description: string }> = {};
 
   for (const result of results) {
@@ -68,7 +55,6 @@ function parseTableResults(
   return parsed;
 }
 
-// Processing functions
 async function extract(input: string) {
   const output = path.join(input, "output");
 
@@ -84,7 +70,7 @@ async function compile(
   fieldMappings: FieldMappings,
   compendiumType: string,
   sortAlphabetically: boolean,
-  useIdAsKey: boolean
+  useIdAsKey: boolean,
 ) {
   const outputDir = path.join(input, "output");
   const glob = new Glob("**/*.json");
@@ -94,10 +80,8 @@ async function compile(
     throw new Error(`No mapping found for type: ${compendiumType}`);
   }
 
-  const packName = getPackName(input);
-  const label = `${packName} ${compendiumType}`;
+  const label = `${compendiumType} Pack`;
 
-  // Collect entries as array first for potential sorting
   const entriesArray: { key: string; name: string; data: Record<string, any> }[] = [];
 
   for await (const file of glob.scan(outputDir)) {
@@ -123,12 +107,10 @@ async function compile(
     entriesArray.push({ key: entryKey, name: entryName, data: entry });
   }
 
-  // Sort alphabetically if enabled
   if (sortAlphabetically) {
     entriesArray.sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  // Convert to object keyed by name or id
   const entries: Record<string, Record<string, any>> = {};
   for (const { key, data } of entriesArray) {
     entries[key] = data;
@@ -149,7 +131,6 @@ async function compile(
   return { count: entriesArray.length, filename: outputFilename, label };
 }
 
-// Main App Component
 function App() {
   const [state, setState] = useState<AppState>("input");
   const [focusedField, setFocusedField] = useState<FocusedField>("inputFolder");
@@ -167,7 +148,6 @@ function App() {
     label: string;
   } | null>(null);
 
-  // Load available types from mapping file
   useEffect(() => {
     async function loadTypes() {
       if (!fs.existsSync(mappingFile)) {
@@ -187,7 +167,7 @@ function App() {
         setTypeOptions([]);
       }
     }
-    loadTypes();
+    void loadTypes();
   }, [mappingFile]);
 
   useKeyboard((key) => {
@@ -207,8 +187,11 @@ function App() {
       if (key.name === "space" && focusedField === "idKeyCheckbox") {
         setUseIdAsKey((prev) => !prev);
       }
-      if (key.name === "return" && (focusedField === "sortCheckbox" || focusedField === "idKeyCheckbox")) {
-        handleProcess();
+      if (
+        key.name === "return" &&
+        (focusedField === "sortCheckbox" || focusedField === "idKeyCheckbox")
+      ) {
+        void handleProcess();
       }
       if (key.name === "escape") {
         process.exit(0);
@@ -268,7 +251,13 @@ function App() {
       await extract(inputFolder);
       setStatusMessage("Compiling Babele translations...");
 
-      const result = await compile(inputFolder, fieldMappings, selectedType, sortAlphabetically, useIdAsKey);
+      const result = await compile(
+        inputFolder,
+        fieldMappings,
+        selectedType,
+        sortAlphabetically,
+        useIdAsKey,
+      );
 
       setResultInfo(result);
       setStatusMessage("");
@@ -281,25 +270,19 @@ function App() {
 
   return (
     <box flexDirection="column" padding={0} flexGrow={1}>
-      {/* Header */}
       <box justifyContent="center" marginBottom={1}>
         <ascii-font font="tiny" color={COLORS.primary} text="BABELIZER" />
       </box>
 
       <box justifyContent="center" marginBottom={1}>
-        <text fg={COLORS.secondary  }>
-          Foundry VTT Babele Data Extractor
-        </text>
+        <text fg={COLORS.secondary}>Foundry VTT Babele Data Extractor</text>
       </box>
 
-      {/* Input Form */}
       {state === "input" && (
         <box flexDirection="column" gap={1}>
-  
           <box flexDirection="column">
             <text fg={COLORS.primary}>
-              <strong>Compendium Pack</strong>{" "}
-              <span fg={COLORS.muted}>(LevelDB)</span>
+              <strong>Compendium Pack</strong> <span fg={COLORS.muted}>(LevelDB)</span>
             </text>
             <box
               border
@@ -316,11 +299,9 @@ function App() {
             </box>
           </box>
 
-
           <box flexDirection="column">
             <text fg={COLORS.primary}>
-              <strong>Mapping File</strong>{" "}
-              <span fg={COLORS.muted}>(JSON)</span>
+              <strong>Mapping File</strong> <span fg={COLORS.muted}>(JSON)</span>
             </text>
             <box
               border
@@ -349,8 +330,8 @@ function App() {
             >
               {typeOptions.length > 0 ? (
                 <select
-                  style={{height: 4}}
-                  options={typeOptions}                  
+                  style={{ height: 4 }}
+                  options={typeOptions}
                   focused={focusedField === "compendiumType"}
                   onChange={(index) => setSelectedTypeIndex(index)}
                 />
@@ -360,7 +341,6 @@ function App() {
             </box>
           </box>
 
-          {/* Sort Checkbox */}
           <box flexDirection="row" gap={1} alignItems="center">
             <text fg={focusedField === "sortCheckbox" ? COLORS.primary : COLORS.muted}>
               {sortAlphabetically ? "[x]" : "[ ]"}
@@ -370,38 +350,40 @@ function App() {
             </text>
           </box>
 
-          {/* Use ID as Key Checkbox */}
           <box flexDirection="row" gap={1} alignItems="center">
             <text fg={focusedField === "idKeyCheckbox" ? COLORS.primary : COLORS.muted}>
               {useIdAsKey ? "[x]" : "[ ]"}
             </text>
             <text fg={focusedField === "idKeyCheckbox" ? COLORS.primary : COLORS.secondary}>
-              Use ID as key instead of name
+              Use id instead of name as a key
             </text>
           </box>
 
-          {/* Instructions */}
           <box marginTop={1} flexDirection="column">
             <text fg={COLORS.muted}>
               <span fg={COLORS.accent}>Tab</span> Switch fields │{" "}
               <span fg={COLORS.accent}>Space</span> Toggle checkbox │{" "}
-              <span fg={COLORS.accent}>Enter</span> Process │{" "}
-              <span fg={COLORS.accent}>Esc</span> Exit
+              <span fg={COLORS.accent}>Enter</span> Process │ <span fg={COLORS.accent}>Esc</span>{" "}
+              Exit
             </text>
           </box>
         </box>
       )}
 
-      {/* Processing State */}
       {state === "processing" && (
         <box flexDirection="column" alignItems="center" justifyContent="center" flexGrow={1}>
           <text fg={COLORS.error}>⏳ {statusMessage}</text>
         </box>
       )}
 
-      {/* Complete State */}
       {state === "complete" && resultInfo && (
-        <box flexDirection="column" alignItems="center" justifyContent="center" flexGrow={1} gap={1}>
+        <box
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          flexGrow={1}
+          gap={1}
+        >
           <text fg={COLORS.success}>
             <strong>✓ Extraction Complete!</strong>
           </text>
@@ -423,17 +405,22 @@ function App() {
         </box>
       )}
 
-      {/* Error State */}
       {state === "error" && (
-        <box flexDirection="column" alignItems="center" justifyContent="center" flexGrow={1} gap={1}>
+        <box
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          flexGrow={1}
+          gap={1}
+        >
           <text fg={COLORS.error}>
             <strong>✗ Error</strong>
           </text>
           <text fg={COLORS.error}>{errorMessage}</text>
           <box marginTop={1}>
             <text fg={COLORS.muted}>
-              <span fg={COLORS.accent}>R</span> Try again │{" "}
-              <span fg={COLORS.accent}>Q/Esc</span> Exit
+              <span fg={COLORS.accent}>R</span> Try again │ <span fg={COLORS.accent}>Q/Esc</span>{" "}
+              Exit
             </text>
           </box>
         </box>
