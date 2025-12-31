@@ -116,7 +116,7 @@ async function compile(
       }
     }
 
-    if (compendiumType === "Tables" && Array.isArray(content.results)) {
+    if (Array.isArray(content.results)) {
       entry.results = parseTableResults(content.results);
     }
 
@@ -295,7 +295,7 @@ function App() {
       {/* Input Form */}
       {state === "input" && (
         <box flexDirection="column" gap={1}>
-          {/* Input Folder */}
+  
           <box flexDirection="column">
             <text fg={COLORS.primary}>
               <strong>Compendium Pack</strong>{" "}
@@ -316,7 +316,7 @@ function App() {
             </box>
           </box>
 
-          {/* Mapping File */}
+
           <box flexDirection="column">
             <text fg={COLORS.primary}>
               <strong>Mapping File</strong>{" "}
@@ -338,7 +338,6 @@ function App() {
             </box>
           </box>
 
-          {/* Compendium Type Selection */}
           <box flexDirection="column">
             <text fg={COLORS.primary}>
               <strong>Compendium Type</strong>
@@ -363,19 +362,9 @@ function App() {
 
           {/* Sort Checkbox */}
           <box flexDirection="row" gap={1} alignItems="center">
-            <box
-              border
-              borderStyle={focusedField === "sortCheckbox" ? "double" : "single"}
-              borderColor={focusedField === "sortCheckbox" ? COLORS.primary : COLORS.muted}
-              width={3}
-              height={2}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <text fg={sortAlphabetically ? COLORS.primary : COLORS.muted}>
-                {sortAlphabetically ? "✓" : " "}
-              </text>
-            </box>
+            <text fg={focusedField === "sortCheckbox" ? COLORS.primary : COLORS.muted}>
+              {sortAlphabetically ? "[x]" : "[ ]"}
+            </text>
             <text fg={focusedField === "sortCheckbox" ? COLORS.primary : COLORS.secondary}>
               Sort entries alphabetically
             </text>
@@ -383,19 +372,9 @@ function App() {
 
           {/* Use ID as Key Checkbox */}
           <box flexDirection="row" gap={1} alignItems="center">
-            <box
-              border
-              borderStyle={focusedField === "idKeyCheckbox" ? "double" : "single"}
-              borderColor={focusedField === "idKeyCheckbox" ? COLORS.primary : COLORS.muted}
-              width={3}
-              height={2}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <text fg={useIdAsKey ? COLORS.primary : COLORS.muted}>
-                {useIdAsKey ? "✓" : " "}
-              </text>
-            </box>
+            <text fg={focusedField === "idKeyCheckbox" ? COLORS.primary : COLORS.muted}>
+              {useIdAsKey ? "[x]" : "[ ]"}
+            </text>
             <text fg={focusedField === "idKeyCheckbox" ? COLORS.primary : COLORS.secondary}>
               Use ID as key instead of name
             </text>
