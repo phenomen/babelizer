@@ -1,6 +1,6 @@
 {
   "name": "babelizer",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": false,
   "description": "CLI tool to extract Foundry VTT compendium packs into Babele translation files",
   "keywords": [
@@ -45,7 +45,7 @@
     "@types/react": "^19.2.7",
     "oxfmt": "^0.21.0",
     "oxlint": "^1.36.0",
-    "oxlint-tsgolint": "^0.10.0"
+    "oxlint-tsgolint": "^0.10.1"
   },
   "peerDependencies": {
     "typescript": "^5.9.2"

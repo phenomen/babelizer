@@ -83,14 +83,22 @@ async function compile(
   const label = `${compendiumType} Pack`;
 
   const entriesArray: { key: string; name: string; data: Record<string, any> }[] = [];
+  const foldersArray: { name: string }[] = [];
 
   for await (const file of glob.scan(outputDir)) {
     const filePath = path.join(outputDir, file);
     const content = await Bun.file(filePath).json();
 
     const entryName = content.name as string;
+    const entryKey = content._key as string | undefined;
+
+    if (entryKey?.startsWith("!folders!")) {
+      foldersArray.push({ name: entryName });
+      continue;
+    }
+
     const entryId = content._id as string;
-    const entryKey = useIdAsKey ? entryId : entryName;
+    const key = useIdAsKey ? entryId : entryName;
     const entry: Record<string, any> = {};
 
     for (const [outputKey, sourcePath] of Object.entries(typeMapping)) {
@@ -104,11 +112,12 @@ async function compile(
       entry.results = parseTableResults(content.results);
     }
 
-    entriesArray.push({ key: entryKey, name: entryName, data: entry });
+    entriesArray.push({ key, name: entryName, data: entry });
   }
 
   if (sortAlphabetically) {
     entriesArray.sort((a, b) => a.name.localeCompare(b.name));
+    foldersArray.sort((a, b) => a.name.localeCompare(b.name));
   }
 
   const entries: Record<string, Record<string, any>> = {};
@@ -116,19 +125,29 @@ async function compile(
     entries[key] = data;
   }
 
+  const folders: Record<string, string> = {};
+  for (const { name } of foldersArray) {
+    folders[name] = name;
+  }
+
   const outputFilename = getOutputFilename(input);
-  const result = {
+  const result: Record<string, any> = {
     label,
     mapping: typeMapping,
-    entries,
   };
+
+  if (Object.keys(folders).length > 0) {
+    result.folders = folders;
+  }
+
+  result.entries = entries;
 
   if (!fs.existsSync("output")) {
     fs.mkdirSync("output", { recursive: true });
   }
 
   await Bun.write(`output/${outputFilename}`, JSON.stringify(result, null, 2));
-  return { count: entriesArray.length, filename: outputFilename, label };
+  return { count: entriesArray.length, folderCount: foldersArray.length, filename: outputFilename, label };
 }
 
 function App() {
@@ -144,6 +163,7 @@ function App() {
   const [errorMessage, setErrorMessage] = useState("");
   const [resultInfo, setResultInfo] = useState<{
     count: number;
+    folderCount: number;
     filename: string;
     label: string;
   } | null>(null);
@@ -392,6 +412,11 @@ function App() {
           </text>
           <text>
             Extracted <span fg={COLORS.primary}>{resultInfo.count}</span> entries
+            {resultInfo.folderCount > 0 && (
+              <span>
+                {" "}and <span fg={COLORS.primary}>{resultInfo.folderCount}</span> folders
+              </span>
+            )}
           </text>
           <text>
             Output: <span fg={COLORS.accent}>output/{resultInfo.filename}</span>
